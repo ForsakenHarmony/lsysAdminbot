@@ -1,4 +1,4 @@
-const {MTProto} = require('telegram-mtproto');
+const { MTProto } = require('telegram-mtproto');
 
 /*
  * This module uses the telegram mtproto api to resolve usernames into userIDs.
@@ -18,8 +18,9 @@ module.exports = class Resolver {
       },
     });
     this.loggedin = this.login(token);
-    this.middleware = (...args)=>this.req(...args);
+    this.middleware = (...args) => this.req(...args);
   }
+
   async login(token) {
     await this.mtproto('auth.importBotAuthorization', {
       flags: 0,
@@ -29,20 +30,22 @@ module.exports = class Resolver {
     });
     console.log('Login using mtproto successful.');
   }
+
   async resolve(username) {
     await this.loggedin;
-    return await this.mtproto('contacts.resolveUsername', {username}).then((peer)=>{
-      let user = peer.users[0];
-      if (user.username == username) return user;
-      return;
-    }).catch(()=>undefined);
+    try {
+      const peer = await this.mtproto('contacts.resolveUsername', { username });
+      const user = peer.users[0];
+      if (user.username === username) return user;
+    } catch (_) {}
   }
+
   async req(ctx, next) {
     if (ctx.update && ctx.update.message && ctx.update.message.entities) {
-      let msg = ctx.update.message;
+      const msg = ctx.update.message;
       for (const e of msg.entities) {
         if (e.type === 'mention' && !e.user) {
-          let username = msg.text.slice(e.offset+1, e.offset+e.length);
+          const username = msg.text.slice(e.offset + 1, e.offset + e.length);
           e.user = await this.resolve(username);
         }
       }

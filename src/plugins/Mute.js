@@ -1,5 +1,5 @@
 const MUTE_REQUIRE = 6;
-const MUTE_TIMEOUT = 12*60;
+const MUTE_TIMEOUT = 12 * 60;
 
 const Vote = require('./Vote.js');
 
@@ -8,7 +8,7 @@ module.exports = class Mute {
     this.bot = bot;
     this.tg = bot.telegram;
     this.resolver = resolver;
-    this.bot.command('mute', (ctx)=>this.req(ctx));
+    this.bot.command('mute', ctx => this.req(ctx));
     this.bot.helpQueue(this.help, this.settings);
 
     this.votes = {};
@@ -30,17 +30,24 @@ module.exports = class Mute {
 
     if (res.sum >= MUTE_REQUIRE) {
       done = true;
-      let extras = {until_date: Math.round(new Date()/1000 + MUTE_TIMEOUT*60), can_send_messages: false};
-      await this.tg.restrictChatMember(chat.id, user.id, extras).then(()=>{
-        msg += `I've muted the user in question.`;
-      }).catch((e)=>{
-        console.error(e);
-        msg += `I am sorry, but something went wrong...`;
-      });
+      let extras = {
+        until_date: Math.round(new Date() / 1000 + MUTE_TIMEOUT * 60),
+        can_send_messages: false,
+      };
+      await this.tg
+        .restrictChatMember(chat.id, user.id, extras)
+        .then(() => {
+          msg += `I've muted the user in question.`;
+        })
+        .catch(e => {
+          console.error(e);
+          msg += `I am sorry, but something went wrong...`;
+        });
     } else {
-      msg += `I am currently missing another ${MUTE_REQUIRE - res.sum} confirmations.`;
+      msg += `I am currently missing another ${MUTE_REQUIRE -
+        res.sum} confirmations.`;
     }
-    return {done, msg};
+    return { done, msg };
   }
 
   async req(ctx) {
@@ -57,7 +64,7 @@ module.exports = class Mute {
       msg.chat.id,
       txt,
       ['Confirm'],
-      (...args)=>this.processVotes(...args),
+      (...args) => this.processVotes(...args),
       msg.chat,
       user
     );

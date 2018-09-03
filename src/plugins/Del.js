@@ -6,7 +6,7 @@ module.exports = class Del {
   constructor(bot) {
     this.bot = bot;
     this.tg = bot.telegram;
-    this.bot.command('delete', (ctx)=>this.req(ctx));
+    this.bot.command('delete', ctx => this.req(ctx));
     this.bot.helpQueue(this.help, this.settings);
 
     this.votes = {};
@@ -23,17 +23,22 @@ module.exports = class Del {
 
     if (res.sum >= DEL_REQUIRE) {
       done = true;
-      await this.tg.deleteMessage(del.chat.id, del.message_id).then(()=>{
-        msg += `I've deleted the message in question.`;
-      }).catch((e)=>{
-        console.error(e);
-        msg += `I am sorry, but something went wrong...`;
-      });
+      await this.tg
+        .deleteMessage(del.chat.id, del.message_id)
+        .then(() => {
+          msg += `I've deleted the message in question.`;
+        })
+        .catch(e => {
+          console.error(e);
+          msg += `I am sorry, but something went wrong...`;
+        });
     } else {
-      let rem = DEL_REQUIRE-res.sum;
-      msg += `I am currently missing another ${rem} confirmation${rem!=1?'s':''}.`;
+      let rem = DEL_REQUIRE - res.sum;
+      msg += `I am currently missing another ${rem} confirmation${
+        rem != 1 ? 's' : ''
+      }.`;
     }
-    return {done, msg};
+    return { done, msg };
   }
   async req(ctx) {
     console.log('del request', ctx, ctx.update.message);
@@ -43,13 +48,13 @@ module.exports = class Del {
     let msg = ctx.update.message.reply_to_message;
     let txt = `Should I delete the message?`;
 
-    let vote = new Vote(
-      this.bot,
-      msg.chat.id,
-      txt,
-      ['Confirm'],
-      (...args)=>this.processVotes(...args),
-      msg
-    );
+    let vote = new Vote({
+      bot: this.bot,
+      chatId: msg.chat.id,
+      question: txt,
+      values: ['Confirm'],
+      cb: (...args) => this.processVotes(...args),
+      args: [msg],
+    });
   }
 };
